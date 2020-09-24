@@ -1,0 +1,10 @@
+{
+    "name": "Pi Temp",
+    "description": "For my Orange PI",
+    "uuid": "pi_temp@xvanturing.gitlab.com",
+    "shell-version": [
+      "3.36"
+    ],
+    "version": 1,
+    "gettext-domain": "gnome-shell-extension-pi-temp"
+  }
