@@ -39,29 +39,52 @@ let PiTempIndicator = GObject.registerClass(class extends PanelMenu.Button {
         this._menuLayout.add(this._initialIcon)
         this._menuLayout.add(this._label)
         this.add_child(this._menuLayout)
-
+        this._need_notify = true
+        this.settings = ExtensionUtils.getSettings()
         this._updateUI();
-        this._updateUITimeoutId = Mainloop.timeout_add(2000, async () => {
+        this._addTimer()
+        this.connect('destroy', this._onDestroy.bind(this));
+
+        this.settings.connect('changed::update-time', () => { this._updateTimeChanged() })
+    }
+    _updateTimeChanged() {
+        Mainloop.source_remove(this._updateUITimeoutId);
+        this._addTimer();
+    }
+    _addTimer() {
+        this._updateUITimeoutId = Mainloop.timeout_add(this.settings.get_int('update-time') * 1000, async () => {
             await this._updateUI();
             return true;
         });
-
-        this.connect('destroy', this._onDestroy.bind(this));
     }
     async _updateUI() {
-        const [ok, stdout, stderr] = await exec("ssh root@192.168.1.207 cat /sys/class/thermal/thermal_zone0/temp".split(" "))
+        let host = this.settings.get_string("pi-ip")
+        const [ok, stdout, stderr] = await exec(`ssh root@${host} cat /sys/class/thermal/thermal_zone0/temp`.split(" "))
         if (this._label != null) {
             if (ok) {
-                let temp = Math.round(parseInt(stdout) / 1000)
+                let temp = parseInt(stdout) / 1000
+                let format_template = '%.2f';
+                if (!this.settings.get_boolean('show-decimal-value')) {
+                    format_template = '%.0f';
+                }
+                format_template += '%s';
+                temp = format_template.format(temp, centigrade)
                 if (temp != NaN) {
-                    this._label.text = `${temp}${centigrade}`
+                    let _limit = this.settings.get_int('warning-limit')
+                    if (temp > _limit && this._need_notify) {
+                        Main.notify(`Wanring: Your Pi's CPU temperature is above ${_limit}${centigrade}`)
+                        this._need_notify = false
+                    } else if (temp < _limit) {
+                        this._need_notify = true
+                    }
+                    this._label.text = temp
                     return
                 }
             }
             log("Pi Temp: Failed to query temperature, message:")
             log(stdout)
             log(stderr)
-            this._label.text = "NaN"
+            this._label.text = "N/A"
         }
     }
     _onDestroy() {

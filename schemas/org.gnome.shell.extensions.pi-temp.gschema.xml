@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extension-ssr-proxy">
+  <schema id="org.gnome.shell.extensions.pi-temp" path="/org/gnome/shell/extensions/pi-temp/">
+    <!-- See also: https://developer.gnome.org/glib/stable/gvariant-format-strings.html -->
+    <key name="warning-limit" type="i">
+      <default>60</default>
+      <summary>Warning Temperature</summary>
+    </key>
+    <key name="update-time" type="i">
+      <default>2</default>
+      <summary>Poll every (sec)</summary>
+    </key>
+    <key name="pi-ip" type="s">
+      <default>"pi"</default>
+      <summary>IP/Hostname of your Pi</summary>
+    </key>
+    <key name="show-decimal-value" type="b">
+      <default>false</default>
+      <summary>Show Decimal Value</summary>
+    </key>
+  </schema>
+</schemalist>
